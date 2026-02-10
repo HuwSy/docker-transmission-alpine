@@ -14,11 +14,11 @@ RUN apk add --no-cache \
       transmission-cli \
       tini ca-certificates bash curl grep sed jq cronie
 
-RUN mkdir -p /config /downloads /scripts /opt/default-scripts && \
-    chown -R 1002:1002 /config /downloads /scripts /opt/default-scripts
+RUN mkdir -p /config /downloads /opt/default-scripts && \
+    chown -R 1002:1002 /config /downloads /opt/default-scripts
 
 # -----------------------------
-# Default scripts (always present)
+# Default scripts (baked in)
 # -----------------------------
 
 # Post-download mover
@@ -37,6 +37,30 @@ mkdir -p "$DEST"
 mv "$SRC" "$DEST/"
 EOF
 
+# On-added retracker injector
+COPY --chown=1002:1002 <<'EOF' /opt/default-scripts/on-added.sh
+#!/bin/sh
+
+TORRENT_ID="$TR_TORRENT_ID"
+IS_PRIVATE="$TR_TORRENT_IS_PRIVATE"
+
+# Skip private torrents
+[ "$IS_PRIVATE" = "1" ] && exit 0
+
+RETRACKER_FILE="/config/retracker.txt"
+[ ! -f "$RETRACKER_FILE" ] && exit 0
+
+while IFS= read -r TRACKER; do
+  [ -z "$TRACKER" ] && continue
+
+  transmission-remote localhost:${TRANSMISSION_PORT} \
+    --auth "${TRANSMISSION_USERNAME}:${TRANSMISSION_PASSWORD}" \
+    --torrent "$TORRENT_ID" \
+    --tracker-add "$TRACKER"
+
+done < "$RETRACKER_FILE"
+EOF
+
 # RSS fetcher
 COPY --chown=1002:1002 <<'EOF' /opt/default-scripts/rss-fetch.sh
 #!/bin/sh
@@ -52,6 +76,7 @@ for i in "${!FEEDS[@]}"; do
 
   XML=$(curl -fs "$FEED")
 
+  # Magnets
   echo "$XML" | grep -o 'magnet:[^"<]*' | while read -r MAGNET; do
     transmission-remote localhost:${TRANSMISSION_PORT} \
       --auth "${TRANSMISSION_USERNAME}:${TRANSMISSION_PASSWORD}" \
@@ -59,6 +84,7 @@ for i in "${!FEEDS[@]}"; do
       --torrent-label "$LABEL"
   done
 
+  # Torrent files
   echo "$XML" | grep -o 'http[^"<]*\.torrent' | while read -r TORRENT; do
     transmission-remote localhost:${TRANSMISSION_PORT} \
       --auth "${TRANSMISSION_USERNAME}:${TRANSMISSION_PASSWORD}" \
@@ -72,7 +98,7 @@ EOF
 COPY --chown=1002:1002 <<'EOF' /opt/default-scripts/cron-install.sh
 #!/bin/sh
 
-echo "$RSS_SCHEDULE /scripts/rss-fetch.sh" > /etc/crontabs/1002
+echo "$RSS_SCHEDULE /config/rss-fetch.sh" > /etc/crontabs/1002
 crond -f
 EOF
 
@@ -87,12 +113,12 @@ COPY --chown=1002:1002 <<'EOF' /opt/start-transmission.sh
 CONFIG_DIR="/config"
 SETTINGS="$CONFIG_DIR/settings.json"
 
-# Copy default scripts if user has not provided their own
-[ ! -f /scripts/on-complete.sh ] && cp /opt/default-scripts/on-complete.sh /scripts/
-[ ! -f /scripts/rss-fetch.sh ] && cp /opt/default-scripts/rss-fetch.sh /scripts/
-[ ! -f /scripts/cron-install.sh ] && cp /opt/default-scripts/cron-install.sh /scripts/
+# Copy defaults if missing
+for f in on-complete.sh on-added.sh rss-fetch.sh cron-install.sh; do
+  [ ! -f "/config/$f" ] && cp "/opt/default-scripts/$f" "/config/$f"
+done
 
-chmod 755 /scripts/*.sh
+chmod 755 /config/*.sh
 
 # Create default settings if missing
 if [ ! -f "$SETTINGS" ]; then
@@ -107,7 +133,9 @@ if [ ! -f "$SETTINGS" ]; then
   "peer-port": ${TRANSMISSION_INCOMING_PORT},
   "port-forwarding-enabled": ${TRANSMISSION_UPNP},
   "script-torrent-done-enabled": true,
-  "script-torrent-done-filename": "/scripts/on-complete.sh"
+  "script-torrent-done-filename": "/config/on-complete.sh",
+  "script-torrent-added-enabled": true,
+  "script-torrent-added-filename": "/config/on-added.sh"
 }
 SET
 fi
@@ -145,4 +173,4 @@ ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["/opt/start-transmission.sh"]
 
 EXPOSE 9091 51413
-VOLUME ["/config", "/downloads", "/scripts"]
+VOLUME ["/config", "/downloads"]
