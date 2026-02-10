@@ -29,9 +29,7 @@ docker run -d \
     -e TRANSMISSION_INCOMING_PORT=51413 \ # optional, should match port mapping
     -e TRANSMISSION_UPNP=false \ # optional, upnp enabled
     \
-    -v $(pwd)/config:/config \ # settings.json lives here
-    -v $(pwd)/downloads:/downloads \ # completed files sorted here
-    -v $(pwd)/scripts:/scripts \ # user scripts override defaults
-    \
+    -v $(pwd)/config:/config \ # settings.json user scripts override retracker lives here
+    -v $(pwd)/downloads:/downloads \ # in progress and completed files sorted here
     docker-transmission-alpine
 ```
