@@ -146,6 +146,3 @@ CMD ["/opt/start-transmission.sh"]
 
 EXPOSE 9091 51413
 VOLUME ["/config", "/downloads", "/scripts"]
-
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD curl -fs http://localhost:9091 || exit 1
