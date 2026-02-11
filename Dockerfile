@@ -6,7 +6,7 @@ ENV WEBUI=8080 \
   WEBUSER=admin \
   WEBPASS="" \
   RSSFEEDS="" \
-  SCHEDULE="*/30 * * * *"
+  SCHEDULE="*/30 *"
 
 RUN apk add --no-cache \
   transmission-daemon \
