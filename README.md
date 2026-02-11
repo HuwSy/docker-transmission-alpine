@@ -12,24 +12,15 @@ chown -R 1002:1002 /home/transmission
 chattr -R +C /home/transmission
 ```
 
-Run the container
+Run the container, minimal options
 ```
 docker run -d \
     --name transmission \
-    --user 1002:1002 \ # rootless
-    --cap-drop=ALL \ # no Linux capabilities
-    -p 9091:9091 \ # WebUI
-    -p 51413:51413 \ # torrent port
-    \
-    -e RSS_URLS="URL1,URL2" \ # optional, comma-separated RSS feeds
-    -e RSS_LABELS="Linux,FreeBSD" \ # optional, auto-label per feed
-    -e RSS_SCHEDULE="*/30 * * * *" \ # optional, cron schedule for feeds
-    \
-    -e TRANSMISSION_PASSWORD="" \ # optional, empty = no auth
-    -e TRANSMISSION_INCOMING_PORT=51413 \ # optional, should match port mapping
-    -e TRANSMISSION_UPNP=false \ # optional, upnp enabled
-    \
-    -v $(pwd)/config:/config \ # settings.json user scripts override retracker lives here
-    -v $(pwd)/downloads:/downloads \ # in progress and completed files sorted here
+    --user 1002:1002 \
+    --cap-drop=ALL \
+    -p 8080:8080 \
+    -p 17000:17000 \
+    -v $(pwd)/config:/config \
+    -v $(pwd)/downloads:/downloads \
     docker-transmission-alpine
 ```
