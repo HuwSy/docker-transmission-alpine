@@ -1,5 +1,6 @@
 #!/bin/sh
 
+TORRENT_ID="$TR_TORRENT_ID"
 LABEL=$(echo "$TR_TORRENT_LABELS" | cut -d',' -f1)
 [ -z "$LABEL" ] && exit 0
 
@@ -25,7 +26,13 @@ fi
 SRC="${TR_TORRENT_DIR}/${TR_TORRENT_NAME}"
 DEST="/downloads/completed/${CAP_LABEL}"
 
+sleep 3600
+
 mkdir -p "$DEST"
+transmission-remote localhost:${WEBUI} \
+    --auth "${WEBUSER}:${WEBPASS}" \
+    --torrent "$TORRENT_ID" \
+    -S
 
 rm "$SRC"/*.{txt,nfo,inf,sub,sample} 2>/dev/null || true
 rm "$SRC"/*{S,s}ample*.* 2>/dev/null || true
