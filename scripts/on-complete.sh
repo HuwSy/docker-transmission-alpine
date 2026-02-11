@@ -26,13 +26,29 @@ fi
 SRC="${TR_TORRENT_DIR}/${TR_TORRENT_NAME}"
 DEST="/downloads/completed/${CAP_LABEL}"
 
-sleep 3600
+# loop up to 60 minutes
+i=60
+while [ $i -gt 0 ]; do
+  ratio=$(transmission-remote localhost:${WEBUI} \
+    --auth "${WEBUSER}:${WEBPASS}" \
+    --torrent "$TORRENT_ID" \
+    -i 2>/dev/null | \
+    awk -F': ' '/Ratio/ {gsub(/x/,"",$2); print $2; exit}'
+  )
+  awk -v r="$ratio" -v t="2.0" 'BEGIN{if (r+0 >= t+0) exit 0; exit 1}'
+  if [ $? -eq 0 ]; then
+    i=0
+  else
+    sleep 60
+  fi
+  i=$((i-1))
+done
 
 mkdir -p "$DEST"
 transmission-remote localhost:${WEBUI} \
     --auth "${WEBUSER}:${WEBPASS}" \
     --torrent "$TORRENT_ID" \
-    -S
+    --stop
 
 rm "$SRC"/*.{txt,nfo,inf,sub,sample} 2>/dev/null || true
 rm "$SRC"/*{S,s}ample*.* 2>/dev/null || true
