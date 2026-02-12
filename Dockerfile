@@ -15,10 +15,10 @@ RUN apk add --no-cache \
 
 RUN mkdir -p /config /downloads /opt/default-scripts
 
-COPY scripts/on-complete.sh /opt/default-scripts/on-complete.sh
-COPY scripts/on-added.sh /opt/default-scripts/on-added.sh
-COPY scripts/rss-fetch.sh /opt/default-scripts/rss-fetch.sh
-COPY scripts/start-transmission.sh /opt/start-transmission.sh
+ADD https://raw.githubusercontent.com/HuwSy/docker-transmission-alpine/refs/heads/main/scripts/on-complete.sh /opt/default-scripts/on-complete.sh
+ADD https://raw.githubusercontent.com/HuwSy/docker-transmission-alpine/refs/heads/main/scripts/on-added.sh /opt/default-scripts/on-added.sh
+ADD https://raw.githubusercontent.com/HuwSy/docker-transmission-alpine/refs/heads/main/scripts/rss-fetch.sh /opt/default-scripts/rss-fetch.sh
+ADD https://raw.githubusercontent.com/HuwSy/docker-transmission-alpine/refs/heads/main/scripts/start-transmission.sh /opt/start-transmission.sh
 
 RUN chmod -R 755 /opt/default-scripts && \
     chmod 755 /opt/start-transmission.sh
