@@ -99,12 +99,12 @@ start_rss_scheduler() {
   [ ! -x "/opt/default-scripts/rss-fetch.sh" ] && return 0
 
   PARSED=$(parse_schedule_minutes 2>/dev/null) || PARSED=""
+  
   # default: run every 30 minutes
   if [ -z "$PARSED" ]; then
     MIN_MODE="freq"; MIN_VAL=30
     HOUR_MODE="freq"; HOUR_VAL=1
   else
-    # PARSED like: min:TYPE:VAL hour:TYPE:VAL
     MIN_PART=$(echo "$PARSED" | sed -n 's/^min:\([^ ]*\) .*$/\1/p')
     HOUR_PART=$(echo "$PARSED" | sed -n 's/^.* hour:\(.*\)$/\1/p')
 
@@ -113,70 +113,79 @@ start_rss_scheduler() {
     HOUR_MODE="${HOUR_PART%%:*}"
     HOUR_VAL="${HOUR_PART#*:}"
   fi
+  
+  matches_min() {
+    local CM="$1"
+    case "$MIN_MODE" in
+      freq)
+        local N="$MIN_VAL"
+        [ $((CM % N)) -eq 0 ]
+        ;;
+      start)
+        local A="${MIN_VAL%%/*}"
+        local STEP="${MIN_VAL#*/}"
+        [ "$CM" -lt "$A" ] && return 1
+        local DIFF=$((CM - A))
+        [ $((DIFF % STEP)) -eq 0 ]
+        ;;
+      at)
+        [ "$CM" -eq "$MIN_VAL" ]
+        ;;
+      *)
+        return 1
+        ;;
+    esac
+  }
 
-  /opt/default-scripts/rss-fetch.sh 2>/dev/null || true
+  matches_hour() {
+    local CH="$1"
+    local WRAPPED="$2"
+
+    case "$HOUR_MODE" in
+      freq)
+        local N="$HOUR_VAL"
+        [ $((CH % N)) -eq 0 ]
+        ;;
+      start)
+        local A="${HOUR_VAL%%/*}"
+        local STEP="${HOUR_VAL#*/}"
+
+        # cron-like: do NOT match after midnight rollover
+        [ "$WRAPPED" -eq 1 ] && return 1
+
+        [ "$CH" -lt "$A" ] && return 1
+        local DIFF=$((CH - A))
+        [ $((DIFF % STEP)) -eq 0 ]
+        ;;
+      at)
+        [ "$CH" -eq "$HOUR_VAL" ]
+        ;;
+      *)
+        return 1
+        ;;
+    esac
+  }
 
   while true; do
-    M=$(date +%M 2>/dev/null || echo 0); M=$((10#$M))
-    H=$(date +%H 2>/dev/null || echo 0); H=$((10#$H))
-    S=$(date +%S 2>/dev/null || echo 0); S=$((10#$S))
+    M=$(date +%M); M=$((10#$M))
+    H=$(date +%H); H=$((10#$H))
+    S=$(date +%S); S=$((10#$S))
 
-    # find next minute offset (in minutes) within next 24*60 that satisfies both min & hour constraints
     FOUND=0
+
     for delta in $(seq 0 1439); do
-      CM=$(( (M + delta) % 60 ))
-      CH=$(( (H + (M + delta) / 60) % 24 ))
+      total_minutes=$((H * 60 + M + delta))
+      CH=$(( total_minutes / 60 ))
+      CM=$(( total_minutes % 60 ))
 
-      matches_min() {
-        case "$MIN_MODE" in
-          freq)
-            N=$MIN_VAL
-            [ $((CM % N)) -eq 0 ] && return 0 || return 1
-            ;;
-          start)
-            A="${MIN_VAL%%/*}"; STEP="${MIN_VAL#*/}"
-            if [ "$CM" -lt "$A" ]; then
-              [ "$CM" -eq "$A" ] && return 0 || return 1
-            else
-              DIFF=$(( CM - A ))
-              [ $(( DIFF % STEP )) -eq 0 ] && return 0 || return 1
-            fi
-            ;;
-          at)
-            [ "$CM" -eq "$MIN_VAL" ] && return 0 || return 1
-            ;;
-          *)
-            return 1
-            ;;
-        esac
-      }
+      WRAPPED=0
+      if [ "$CH" -ge 24 ]; then
+        CH=$((CH - 24))
+        WRAPPED=1
+      fi
 
-      matches_hour() {
-        case "$HOUR_MODE" in
-          freq)
-            N=$HOUR_VAL
-            [ $((CH % N)) -eq 0 ] && return 0 || return 1
-            ;;
-          start)
-            A="${HOUR_VAL%%/*}"; STEP="${HOUR_VAL#*/}"
-            if [ "$CH" -lt "$A" ]; then
-              [ "$CH" -eq "$A" ] && return 0 || return 1
-            else
-              DIFF=$(( CH - A ))
-              [ $(( DIFF % STEP )) -eq 0 ] && return 0 || return 1
-            fi
-            ;;
-          at)
-            [ "$CH" -eq "$HOUR_VAL" ] && return 0 || return 1
-            ;;
-          *)
-            return 1
-            ;;
-        esac
-      }
-
-      matches_min || continue
-      matches_hour || continue
+      matches_min "$CM" || continue
+      matches_hour "$CH" "$WRAPPED" || continue
 
       FOUND=1
       NEXT_DELTA="$delta"
@@ -184,18 +193,17 @@ start_rss_scheduler() {
     done
 
     if [ "$FOUND" -ne 1 ]; then
-      # fallback: sleep 60s and retry
-      sleep 60 || true
+      sleep 60
       continue
     fi
 
-    # compute wait seconds until that match
-    # total seconds until target = NEXT_DELTA*60 - S
     WAIT_SEC=$(( NEXT_DELTA * 60 - S ))
-    [ "$WAIT_SEC" -le 0 ] && WAIT_SEC=$(( WAIT_SEC + 60 )) # minimal positive
-    sleep "$WAIT_SEC" || true
+    if [ "$WAIT_SEC" -lt 0 ]; then
+      WAIT_SEC=0
+    fi
+
+    sleep "$WAIT_SEC"
     /opt/default-scripts/rss-fetch.sh 2>/dev/null || true
-    continue
   done
 }
 
