@@ -215,11 +215,12 @@ if [ ! -f "$SETTINGS" ] && [ -w "$CONFIG_DIR" ]; then
   "script-torrent-added-enabled": true,
   "script-torrent-added-filename": "/opt/default-scripts/on-added.sh",
   "dht-enabled": true,
-  "utp-enabled": true,
   "dht-listen-port": ${INCOMING},
   "lpd-enabled": true,
   "pex-enabled": true,
-  "webseeds-enabled": true
+  "preallocation": 0,
+  "rename_partial_files": false,
+  "encryption": "preferred"
 }
 SET
 fi
