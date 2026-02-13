@@ -21,7 +21,8 @@ ADD https://raw.githubusercontent.com/HuwSy/docker-transmission-alpine/refs/head
 ADD https://raw.githubusercontent.com/HuwSy/docker-transmission-alpine/refs/heads/main/scripts/start-transmission.sh /opt/start-transmission.sh
 
 RUN chmod -R 755 /opt/default-scripts && \
-    chmod 755 /opt/start-transmission.sh
+    chmod 755 /opt/start-transmission.sh && \
+    chmod -R 0777 /config
 
 USER 1002:1002
 
