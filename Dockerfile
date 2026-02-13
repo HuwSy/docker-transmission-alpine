@@ -25,7 +25,9 @@ RUN chmod -R 755 /opt/default-scripts && \
 
 USER 1002:1002
 
+EXPOSE 8080 17000/tcp 17000/udp
+
+VOLUME /config
+
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["/opt/start-transmission.sh"]
-
-EXPOSE 8080 17000/tcp 17000/udp
