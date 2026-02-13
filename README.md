@@ -20,6 +20,6 @@ docker run -d \
     --cap-drop=ALL \
     -p 8080:8080 \
     -p 17000:17000 \
-    -v $(pwd)/downloads:/downloads \
+    -v /home/transmission/downloads:/downloads \
     docker-transmission-alpine
 ```
