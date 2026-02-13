@@ -26,3 +26,14 @@ docker run -d \
 ```
 
 If you want to adjust the scripts then map the config, make new files and update settings accordingly.
+
+Additional optional options
+```
+    -e WEBUI=8080 \ # web rpc port
+    -e INCOMING=17000 \ # peer port
+    -e UPNP=false \ # enable disable override for upnp
+    -e WEBUSER="admin" \ # default web user
+    -e WEBPASS="" \ # default password or not required if blank
+    -e RSSFEEDS="" \ # feed reader and labeling. ie Linux:https://...,FreeBSD:https://...
+    -e SCHEDULE="*/30 *" \ # lose cron'esq shedule pattern for start and/or recurrence but not comma delimited support
+```
