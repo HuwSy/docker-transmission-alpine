@@ -12,7 +12,7 @@ chown -R 1002:1002 /home/transmission
 chattr -R +C /home/transmission
 ```
 
-Run the container, minimal options
+Run the container, minimal options even config volume is optional
 ```
 docker run -d \
     --name transmission \
@@ -20,7 +20,6 @@ docker run -d \
     --cap-drop=ALL \
     -p 8080:8080 \
     -p 17000:17000 \
-    -v $(pwd)/config:/config \
     -v $(pwd)/downloads:/downloads \
     docker-transmission-alpine
 ```
