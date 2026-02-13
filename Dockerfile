@@ -13,7 +13,7 @@ RUN apk add --no-cache \
   transmission-cli \
   tini ca-certificates curl grep sed jq
 
-RUN mkdir -p /config /downloads /opt/default-scripts
+RUN mkdir -p /config /opt/default-scripts
 
 ADD https://raw.githubusercontent.com/HuwSy/docker-transmission-alpine/refs/heads/main/scripts/on-complete.sh /opt/default-scripts/on-complete.sh
 ADD https://raw.githubusercontent.com/HuwSy/docker-transmission-alpine/refs/heads/main/scripts/on-added.sh /opt/default-scripts/on-added.sh
