@@ -13,7 +13,7 @@ chattr -R +C /home/transmission
 ```
 
 Run the container. 
-With minimal options even config volume is optional. But if you want to adjust the scripts then map the config and make new files and update settings accordingly
+With minimal options even config volume is optional.
 ```
 docker run -d \
     --name transmission \
@@ -24,3 +24,5 @@ docker run -d \
     -v /home/transmission/downloads:/downloads \
     docker-transmission-alpine
 ```
+
+But if you want to adjust the scripts then map the config and make new files and update settings accordingly.
