@@ -12,7 +12,8 @@ chown -R 1002:1002 /home/transmission
 chattr -R +C /home/transmission
 ```
 
-Run the container, minimal options even config volume is optional
+Run the container. 
+With minimal options even config volume is optional. But if you want to adjust the scripts then map the config and make new files and update settings accordingly
 ```
 docker run -d \
     --name transmission \
