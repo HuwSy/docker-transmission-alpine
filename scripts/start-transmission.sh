@@ -20,7 +20,6 @@ require_mount() {
   fi
 }
 
-require_mount "/config"
 require_mount "/downloads"
 
 parse_schedule_minutes() {
