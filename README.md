@@ -1,18 +1,25 @@
 # Simplest Torrent on Alpine I could muster
 
-Build
+## Build
+
 ```
 docker build -t docker-transmission-alpine .
 ```
 
-Make the paths needed and permissions, assuming 1002 uid:gid but it could be any
+## Configuration
+
+Create the required paths and set permissions, assuming 1002 uid:gid (or any other user):
+
 ```
 mkdir -p /home/transmission/config /home/transmission/downloads
 chown -R 1002:1002 /home/transmission
 chattr -R +C /home/transmission
 ```
 
-Run the container, with minimal options even config volume is optional.
+## Running the Container
+
+Run the container with minimal options. The config volume is optional:
+
 ```
 docker run -d \
     --name transmission \
@@ -25,18 +32,42 @@ docker run -d \
     docker-transmission-alpine
 ```
 
-If you want to adjust the scripts then map the config, run once, then edit the settings and add new script files accordingly. The script folder in this repo has the current defaults. 
+## Configuration Volume (Optional)
+
+If you want to adjust the scripts, map the config volume, run once, then edit the settings and add new script files accordingly. The script folder in this repo has the current defaults:
+
 ```
     -v /home/transmission/config:/config \
 ```
 
-Additional optional options
+## Environment Variables (Optional)
+
+- `WEBUI=8080` - Web RPC port
+- `INCOMING=17000` - Peer port
+- `UPNP=false` - Enable/disable override for UPnP
+- `WEBUSER="admin"` - Default web user
+- `WEBPASS=""` - Default password (not required if blank)
+- `RSSFEEDS=""` - Feed reader and labeling (e.g., Linux:https://...,FreeBSD:https://...)
+- `SCHEDULE="*/30 *"` - Cron-like schedule pattern for start and/or recurrence (no comma-delimited support)
+
+Example with environment variables:
+
 ```
-    -e WEBUI=8080 \ # web rpc port
-    -e INCOMING=17000 \ # peer port
-    -e UPNP=false \ # enable disable override for upnp
-    -e WEBUSER="admin" \ # default web user
-    -e WEBPASS="" \ # default password or not required if blank
-    -e RSSFEEDS="" \ # feed reader and labeling. ie Linux:https://...,FreeBSD:https://...
-    -e SCHEDULE="*/30 *" \ # lose cron'esq shedule pattern for start and/or recurrence but not comma delimited support
+docker run -d \
+    --name transmission \
+    --user 1002:1002 \
+    --cap-drop=ALL \
+    --security-opts no-new-privileges \
+    -p 8080:8080 \
+    -p 17000:17000 \
+    -v /home/transmission/downloads:/downloads \
+    -v /home/transmission/config:/config \
+    -e WEBUI=8080 \
+    -e INCOMING=17000 \
+    -e UPNP=false \
+    -e WEBUSER="admin" \
+    -e WEBPASS="" \
+    -e RSSFEEDS="" \
+    -e SCHEDULE="*/30 *" \
+    docker-transmission-alpine
 ```
