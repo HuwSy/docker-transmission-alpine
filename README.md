@@ -25,7 +25,10 @@ docker run -d \
     docker-transmission-alpine
 ```
 
-If you want to adjust the scripts then map the config, make new files and update settings accordingly.
+If you want to adjust the scripts then map the config, run once, then edit the settings and add new script files accordingly. The script folder in this repo has the current defaults. 
+```
+    -v /home/transmission/config:/config \
+```
 
 Additional optional options
 ```
