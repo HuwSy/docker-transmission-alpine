@@ -18,7 +18,7 @@ chattr -R +C /home/transmission
 
 ## Running the Container
 
-Run the container with minimal options. The config volume is optional:
+Run the container with minimal options. This requires the downloads directory to be a mounted volume at runtime. The container will refuse to start if /downloads is not a mount. The config volume is optional.
 
 ```
 docker run -d \
