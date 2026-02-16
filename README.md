@@ -27,6 +27,7 @@ docker run -d \
     --cap-drop=ALL \
     --security-opts no-new-privileges \
     --read-only \
+    --tmpfs /tmp:rw,noexec,nosuid,size=64m \
     -p 8080:8080 \
     -p 17000:17000 \
     -v /home/transmission/downloads:/downloads \
