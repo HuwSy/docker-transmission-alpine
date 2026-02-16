@@ -26,6 +26,7 @@ docker run -d \
     --user 1002:1002 \
     --cap-drop=ALL \
     --security-opts no-new-privileges \
+    --read-only \
     -p 8080:8080 \
     -p 17000:17000 \
     -v /home/transmission/downloads:/downloads \
