@@ -11,6 +11,7 @@ ENV WEBUI=8080 \
 RUN apk add --no-cache \
   transmission-daemon \
   transmission-cli \
+  transmission-common \
   tini ca-certificates curl grep sed jq
 
 RUN mkdir -p /config /opt/default-scripts
