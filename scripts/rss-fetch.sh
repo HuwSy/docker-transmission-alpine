@@ -41,8 +41,8 @@ for ITEM in $RSSFEEDS; do
 
   case "$ITEM" in
     *:*)
-      LABEL=$(trim "${ITEM%%:*}")
-      FEED=$(trim "${ITEM#*:}")
+      LABEL="${ITEM%%:*}"
+      FEED="${ITEM#*:}"
       ;;
     *)
       continue
