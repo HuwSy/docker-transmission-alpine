@@ -11,7 +11,7 @@ ENV WEBUI=8080 \
 RUN apk add --no-cache \
   transmission-daemon \
   transmission-remote \
-  tini ca-certificates curl grep sed jq
+  tini ca-certificates curl grep sed jq busybox
 
 RUN mkdir -p /config /opt/default-scripts
 
