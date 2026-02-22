@@ -50,6 +50,11 @@ transmission-remote localhost:${WEBUI} \
     --torrent "$TORRENT_ID" \
     --stop
 
+transmission-remote localhost:${WEBUI} \
+    --auth "${WEBUSER}:${WEBPASS}" \
+    --torrent "$TORRENT_ID" \
+    --remove
+
 rm "$SRC"/*.{txt,nfo,inf,sub,sample} 2>/dev/null || true
 rm "$SRC"/*{S,s}ample*.* 2>/dev/null || true
 
