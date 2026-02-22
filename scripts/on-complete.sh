@@ -15,7 +15,7 @@ if [ "$CAP_LABEL" = "Films" ] || [ "$CAP_LABEL" = "Film" ] || [ "$CAP_LABEL" = "
   fi
   CAP_LABEL="Films/$FIRST_CHAR"
 elif [ "$CAP_LABEL" = "TV" ] || [ "$CAP_LABEL" = "Tv" ] || [ "$CAP_LABEL" = "Television" ] || [ "$CAP_LABEL" = "Shows" ]; then
-  SHOW_NAME=$(printf "%s" "$TR_TORRENT_NAME" | sed -E 's/([Ss][0-9]+|[Yy][0-9]{4}|[Ss]eason.*|[Ee]pisode.*|[Pp]art.*|[Vv]olume.*|[Dd]isc.*).*//')
+  SHOW_NAME=$(printf "%s" "$TR_TORRENT_NAME" | sed -E 's/([Ss][0-9]+|[Yy][0-9]{4}|[Ss]eason.*|[Ee]pisode.*|[Pp]art.*|[Vv]olume.*|[Dd]isc.*|[Cc]omplete).*//')
   SHOW_NAME=$(printf "%s" "$SHOW_NAME" | sed -E 's/[^A-Za-z]+/ /g' | sed -E 's/(^| )([a-z])/\U\2/g')
   CAP_LABEL="TV/$SHOW_NAME"
 elif [ "$CAP_LABEL" = "Music" ] || [ "$CAP_LABEL" = "Songs" ] || [ "$CAP_LABEL" = "Albums" ] || [ "$CAP_LABEL" = "Singles" ]; then
