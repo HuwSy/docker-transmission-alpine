@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# simple log file
+LOG_FILE="/config/rss-triggered.log"
+touch "$LOG_FILE"
+
 trim() {
   echo "$1" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
 }
@@ -16,18 +20,38 @@ add_from_feed() {
 
   echo "$XML" | grep -o 'magnet:[^"<]*' | while read -r MAGNET; do
     [ -z "$MAGNET" ] && continue
+
+    # skip if already triggered
+    if grep -Fxq "$MAGNET" "$LOG_FILE"; then
+      echo "[RSS] Skipping already downloaded: $MAGNET"
+      continue
+    fi
+
     transmission-remote localhost:${WEBUI} \
       --auth "${WEBUSER}:${WEBPASS}" \
       --add "$MAGNET" \
       --torrent-label "$LABEL"
+
+    # ADDED: log it
+    echo "$MAGNET" >> "$LOG_FILE"
   done
 
   echo "$XML" | grep -o 'http[^"<]*\.torrent' | while read -r TORRENT; do
     [ -z "$TORRENT" ] && continue
+
+    # skip if already triggered
+    if grep -Fxq "$TORRENT" "$LOG_FILE"; then
+      echo "[RSS] Skipping already downloaded: $TORRENT"
+      continue
+    fi
+
     transmission-remote localhost:${WEBUI} \
       --auth "${WEBUSER}:${WEBPASS}" \
       --add "$TORRENT" \
       --torrent-label "$LABEL"
+
+    # ADDED: log it
+    echo "$TORRENT" >> "$LOG_FILE"
   done
 }
 
