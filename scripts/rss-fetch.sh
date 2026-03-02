@@ -30,7 +30,7 @@ add_from_feed() {
     transmission-remote localhost:${WEBUI} \
       --auth "${WEBUSER}:${WEBPASS}" \
       --add "$MAGNET" \
-      --torrent-label "$LABEL"
+      --L "$LABEL"
 
     # ADDED: log it
     echo "$MAGNET" >> "$LOG_FILE"
@@ -48,7 +48,7 @@ add_from_feed() {
     transmission-remote localhost:${WEBUI} \
       --auth "${WEBUSER}:${WEBPASS}" \
       --add "$TORRENT" \
-      --torrent-label "$LABEL"
+      --L "$LABEL"
 
     # ADDED: log it
     echo "$TORRENT" >> "$LOG_FILE"
