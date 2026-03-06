@@ -27,10 +27,16 @@ add_from_feed() {
       continue
     fi
 
-    transmission-remote localhost:${WEBUI} \
+    ID=$(transmission-remote localhost:${WEBUI} \
       --auth "${WEBUSER}:${WEBPASS}" \
       --add "$MAGNET" \
-      --L "$LABEL"
+      -L "$LABEL" \
+      | awk '{print $3}')
+
+    transmission-remote localhost:${WEBUI} \
+      --auth "${WEBUSER}:${WEBPASS}" \
+      -t "$ID" \
+      -L "$LABEL"
 
     # ADDED: log it
     echo "$MAGNET" >> "$LOG_FILE"
