@@ -6,14 +6,19 @@ LABEL=$(echo "$TR_TORRENT_LABELS" | cut -d',' -f1)
 NAME="$TR_TORRENT_NAME"
 DIR="$TR_TORRENT_DIR"
 
+LOG_FILE="/config/torrent-complete.log"
+
 # loop up to 60m for labeled files or 1 day for unlabeled whilst awaiting labeling
 i=60
 r="2.0"
 [ -z "$LABEL" ] && i=1440
 [ -z "$LABEL" ] && r="5.0"
 
+printf "%s: %s (%s) Completed awaiting ratio %s or %s min\n" "$TID" "$NAME" "$LABEL" "$r" "$i" >> "$LOG_FILE"
+
 # loop to time or ratio
-while [ $i -gt 0 ]; do
+c=0
+while [ $c -lt $i ]; do
   ratio=$(transmission-remote localhost:${WEBUI} \
     --auth "${WEBUSER}:${WEBPASS}" \
     --torrent "$TID" \
@@ -22,15 +27,17 @@ while [ $i -gt 0 ]; do
   )
   awk -v r="$ratio" -v t="$r" 'BEGIN{if (r+0 >= t+0) exit 0; exit 1}'
   if [ $? -eq 0 ]; then
-    i=0
+    break
   else
     sleep 60
   fi
-  i=$((i-1))
+  c=$((c+1))
 done
 
-# get labels again
-LABEL=$(
+printf "%s: %s (%s) Completed ratio %s in %s min\n" "$TID" "$NAME" "$LABEL" "$ratio" "$c" >> "$LOG_FILE"
+
+# get labels again if blank in case added simce
+[ -z "$LABEL" ] && LABEL=$(
   transmission-remote localhost:${WEBUI} \
     --auth "${WEBUSER}:${WEBPASS}" \
     -t "$TID" \
@@ -42,7 +49,7 @@ LABEL=$(
           print a[1]
       }
     '
-)
+) && printf "%s: %s Completed and relabeled %s\n" "$TID" "$NAME" "$LABEL" >> "$LOG_FILE"
 
 [ -z "$LABEL" ] && exit 0
 
@@ -68,6 +75,7 @@ fi
 SRC="${DIR}/${NAME}"
 DEST="/downloads/completed/${CAP_LABEL}"
 
+printf "%s: %s (%s) Completed moving to %s\n" "$TID" "$NAME" "$LABEL" "$DEST" >> "$LOG_FILE"
 mkdir -p "$DEST"
 
 transmission-remote localhost:${WEBUI} \
