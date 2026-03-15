@@ -27,6 +27,7 @@ while [ "$c" -lt "$MAX_MIN" ]; do
   info=$(transmission-remote "localhost:${WEBUI}" --auth "${WEBUSER}:${WEBPASS}" --torrent "$TID" -i 2>/dev/null || true)
   # extract Ratio: value (strip trailing x)
   ratio=$(printf '%s\n' "$info" | awk -F': ' '/^[[:space:]]*Ratio/ {gsub(/x/,"",$2); print $2; exit}')
+  ratio="${ratio:-0}"
   # ensure numeric and compare as float using awk
   if printf '%s\n' "$ratio" | grep -Eq '^[0-9]+([.][0-9]+)?$'; then
     if awk -v r="$ratio" -v t="$RATIO_THRESHOLD" 'BEGIN{ if (r+0 >= t+0) exit 0; exit 1 }'; then
