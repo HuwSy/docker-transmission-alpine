@@ -8,7 +8,7 @@ RETRACKER_URL="https://raw.githubusercontent.com/ngosang/trackerslist/master/tra
 [ "$IS_PRIVATE" = "1" ] && exit 0
 
 if [ -f "$RETRACKER_FILE" ]; then
-  AGE=$(( $(date +%s) - $(stat -c %Y "$RETRACKER_FILE") ))
+  AGE=$(( $(date +%s) - $(date -r "$RETRACKER_FILE" +%s) ))
   if [ "$AGE" -gt 172800 ]; then
     curl -fsSL "$RETRACKER_URL" -o "$RETRACKER_FILE"
   fi
@@ -24,6 +24,6 @@ while IFS= read -r TRACKER; do
   transmission-remote localhost:${WEBUI} \
     --auth "${WEBUSER}:${WEBPASS}" \
     --torrent "$TORRENT_ID" \
-    --tracker-add "$TRACKER"
+    --tracker-add "$TRACKER" || true
 
 done < "$RETRACKER_FILE"
