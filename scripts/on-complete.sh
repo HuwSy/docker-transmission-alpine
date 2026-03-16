@@ -71,7 +71,13 @@ case "$CAP_LABEL" in
   Tv|TV|Television|Shows)
     # remove common season/episode markers and non-letters; keep words separated by spaces
     SHOW_NAME=$(printf '%s' "$NAME" | sed -E 's/([Ss][0-9]+|[Yy][0-9]{4}|[Ss]eason[^ ]*|[Ee]pisode[^ ]*|[Pp]art[^ ]*|[Vv]olume[^ ]*|[Dd]isc[^ ]*|[Cc]omplete).*//')
-    SHOW_NAME=$(printf '%s' "$SHOW_NAME" | sed -E 's/[^A-Za-z]+/ /g' | sed -E 's/^ +| +$//g' | sed -E 's/ +/ /g')
+    SHOW_NAME=$(printf '%s' "$SHOW_NAME" | sed -E 's/[^A-Za-z]+/ /g' | sed -E 's/^ +| +$//g' | sed -E 's/ +/ /g' | tr '[:upper:]' '[:lower:]' \
+      | awk '{
+        for(i=1;i<=NF;i++){
+          $i = toupper(substr($i,1,1)) (length($i)>1 ? substr($i,2) : "")
+        }
+        print
+      }')
     [ -z "$SHOW_NAME" ] && SHOW_NAME="Unknown"
     CAP_LABEL="TV/$SHOW_NAME"
     ;;
