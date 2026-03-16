@@ -1,5 +1,7 @@
 FROM alpine:edge
 
+ARG APP_VERSION=0.0.2
+
 ENV WEBUI=8080 \
   INCOMING=17000 \
   UPNP=false \
