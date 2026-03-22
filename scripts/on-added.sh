@@ -11,9 +11,11 @@ if [ -f "$RETRACKER_FILE" ]; then
   AGE=$(( $(date +%s) - $(date -r "$RETRACKER_FILE" +%s) ))
   if [ "$AGE" -gt 172800 ]; then
     curl -fsSL "$RETRACKER_URL" -o "$RETRACKER_FILE"
+    sleep 10
   fi
 else
   curl -fsSL "$RETRACKER_URL" -o "$RETRACKER_FILE"
+  sleep 10
 fi
 
 [ ! -f "$RETRACKER_FILE" ] && exit 0
