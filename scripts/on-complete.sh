@@ -104,7 +104,7 @@ if [ -d "$SRC" ]; then
   # remove common sidecar files before move (case-insensitive)
   find "$SRC" -type f \( -iname '*.txt' -o -iname '*.nfo' -o -iname '*.inf' -o -iname '*.sample' \) -exec rm -f {} \; 2>/dev/null || true
   # move each entry inside SRC to DEST; ignore errors if nothing to move
-  find "$SRC" -mindepth 1 -maxdepth 3 -exec mv -f {} "$DEST"/ \; 2>/dev/null || true
+  find "$SRC" -type f -mindepth 1 -maxdepth 3 -exec mv -f {} "$DEST"/ \; 2>/dev/null || true
   # attempt to remove empty source dir
   rmdir "$SRC" 2>/dev/null || true
 else
