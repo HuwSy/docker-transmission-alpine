@@ -102,7 +102,7 @@ transmission-remote "localhost:${WEBUI}" --auth "${WEBUSER}:${WEBPASS}" --torren
 # move contents of SRC into DEST (works for single-file and multi-file torrents)
 if [ -d "$SRC" ]; then
   # remove common sidecar files before move (case-insensitive)
-  find "$SRC" -type f \( -iname '*.txt' -o -iname '*.nfo' -o -iname '*.inf' -o -iname '*.sample' \) -exec rm -f {} \; 2>/dev/null || true
+  find "$SRC" -type f \( -iname '*.txt' -o -iname '*.nfo' -o -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \) -exec rm -f {} \; 2>/dev/null || true
   # move each entry inside SRC to DEST; ignore errors if nothing to move
   find "$SRC" -type f -mindepth 1 -maxdepth 3 -exec mv -f {} "$DEST"/ \; 2>/dev/null || true
   # attempt to remove empty source dir
