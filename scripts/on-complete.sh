@@ -102,7 +102,7 @@ if [ -d "$SRC" ]; then
   # move each entry inside SRC to DEST; ignore errors if nothing to move
   find "$SRC" -type f -mindepth 1 -maxdepth 3 -exec mv -f {} "$DEST"/ \; 2>/dev/null || true
   # attempt to remove empty source dir
-  rmdir "$SRC" 2>/dev/null || true
+  find "$SRC" -depth -type d -empty -delete 2>/dev/null || true
 else
   # if SRC is a file path, move it
   if [ -e "$SRC" ]; then
