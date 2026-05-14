@@ -40,15 +40,11 @@ done
 
 printf '%s: %s (%s) Completed ratio %s in %s min\n' "$(timestamp)" "$NAME" "$LABEL" "$ratio" "$c" >> "$LOG_FILE"
 
-# re-fetch label if blank (labels may be added after completion)
-if [ -z "$LABEL" ]; then
-  label_info=$(transmission-remote "localhost:${WEBUI}" --auth "${WEBUSER}:${WEBPASS}" -t "$TID" 2>/dev/null || true)
-  LABEL=$(printf '%s\n' "$label_info" | awk 'BEGIN{found=0} /^[[:space:]]*Labels:/ {found=1; next} found && NF{ gsub(/^ *| *$/,""); split($0,a,","); print a[1]; exit }')
-  LABEL="${LABEL:-}"
-  if [ -n "$LABEL" ]; then
-    printf '%s: %s Completed and relabeled %s\n' "$(timestamp)" "$NAME" "$LABEL" >> "$LOG_FILE"
-  fi
-fi
+# re-fetch label and name (labels may be added after completion or names cleaned)
+Tinfo=$(transmission-remote "localhost:${WEBUI}" --auth "${WEBUSER}:${WEBPASS}" -t "$TID" 2>/dev/null || true)
+LABEL=$(printf '%s\n' "$Tinfo" | awk 'BEGIN{found=0} /^[[:space:]]*Labels:/ {found=1; next} found && NF{ gsub(/^ *| *$/,""); split($0,a,","); print a[1]; exit }')
+LABEL="${LABEL:-}"
+NAME=$(printf '%s\n' "$Tinfo" | awk -F': ' '/^[[:space:]]*Name:/ {print $2; exit}')
 
 [ -z "$LABEL" ] && exit 0
 
