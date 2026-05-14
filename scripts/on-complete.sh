@@ -4,9 +4,6 @@ TID="${TR_TORRENT_ID:-}"
 NAME="${TR_TORRENT_NAME:-}"
 DIR="${TR_TORRENT_DIR:-}"
 LABEL="${TR_TORRENT_LABELS:-}"
-case "$LABEL" in
-  *','*) LABEL="${LABEL%%,*}" ;;
-esac
 
 LOG_FILE="/config/torrent-complete.log"
 
@@ -43,7 +40,6 @@ printf '%s: %s (%s) Completed ratio %s in %s min\n' "$(timestamp)" "$NAME" "$LAB
 # re-fetch label and name (labels may be added after completion or names cleaned)
 Tinfo=$(transmission-remote "localhost:${WEBUI}" --auth "${WEBUSER}:${WEBPASS}" -t "$TID" 2>/dev/null || true)
 LABEL=$(printf '%s\n' "$Tinfo" | awk 'BEGIN{found=0} /^[[:space:]]*Labels:/ {found=1; next} found && NF{ gsub(/^ *| *$/,""); split($0,a,","); print a[1]; exit }')
-LABEL="${LABEL:-}"
 NAME=$(printf '%s\n' "$Tinfo" | awk -F': ' '/^[[:space:]]*Name:/ {print $2; exit}')
 
 [ -z "$LABEL" ] && exit 0
