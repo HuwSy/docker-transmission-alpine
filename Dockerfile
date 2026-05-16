@@ -1,7 +1,6 @@
 FROM alpine:edge
 
-ARG APP_VERSION=0.0.3
-ARG NIGHTLY_URL="https://github.com/transmission/transmission-nightly/releases/latest/download/transmission-nightly-x86_64.tar.xz"
+ARG APP_VERSION=0.0.2
 
 ENV WEBUI=8080 \
   INCOMING=17000 \
@@ -12,16 +11,9 @@ ENV WEBUI=8080 \
   SCHEDULE="*/30 *"
 
 RUN apk add --no-cache \
-    tini ca-certificates curl grep sed jq tar xz \
-    libevent libcurl libssl3
-
-# Download and install Transmission nightly
-RUN mkdir -p /opt/transmission && \
-    curl -L "$NIGHTLY_URL" -o /tmp/transmission.tar.xz && \
-    tar -xf /tmp/transmission.tar.xz -C /opt/transmission --strip-components=1 && \
-    ln -s /opt/transmission/bin/transmission-daemon /usr/bin/transmission-daemon && \
-    ln -s /opt/transmission/bin/transmission-remote /usr/bin/transmission-remote && \
-    rm /tmp/transmission.tar.xz
+  transmission-daemon \
+  transmission-remote \
+  tini ca-certificates curl grep sed jq
 
 RUN mkdir -p /config /opt/default-scripts
 
