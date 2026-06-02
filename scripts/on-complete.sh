@@ -40,9 +40,21 @@ printf '%s: %s (%s) Completed ratio %s in %s min\n' "$(timestamp)" "$NAME" "$LAB
 # re-fetch label and name (labels may be added after completion or names cleaned)
 Tinfo=$(transmission-remote "localhost:${WEBUI}" --auth "${WEBUSER}:${WEBPASS}" -t "$TID" 2>/dev/null || true)
 NLABEL=$(printf '%s\n' "$Tinfo" | awk 'BEGIN{found=0} /^[[:space:]]*Labels:/ {found=1; next} found && NF{ gsub(/^ *| *$/,""); split($0,a,","); print a[1]; exit }')
-[ -n "$NLABEL" ] && LABEL="$NLABEL"
+if [ -n "$NLABEL" ]; then
+  case "$NLABEL" in
+    Film|Films|Movie|Movies|Tv|TV|Television|Shows|Music|Songs|Albums|Singles)
+      LABEL="$NLABEL"
+      ;;
+  esac
+fi
+
 NNAME=$(printf '%s\n' "$Tinfo" | awk -F': ' '/^[[:space:]]*Name:/ {print $2; exit}')
-[ -n "$NNAME" ] && NAME="$NNAME"
+if [ -n "$NNAME" ]; then
+  CANDIDATE="${DIR%/}/$NNAME"
+  if [ -e "$CANDIDATE" ] || [ -d "$CANDIDATE" ]; then
+    NAME="$NNAME"
+  fi
+fi
 
 [ -z "$LABEL" ] && exit 0
 
