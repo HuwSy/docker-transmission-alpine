@@ -3,7 +3,7 @@
 ## Build
 
 ```
-docker build -t docker-transmission-alpine .
+docker build --pull --no-cache -t docker-transmission-alpine .
 ```
 
 ## Configuration
