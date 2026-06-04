@@ -104,7 +104,7 @@ esac
 SRC="${DIR%/}/${NAME}"
 DEST="/downloads/completed/${CAP_LABEL}"
 
-printf '%s: %s (%s) Completed moving to %s\n' "$(timestamp)" "$NAME" "$LABEL" "$DEST" >> "$LOG_FILE"
+printf '%s: %s (%s) Completed %s moving to %s\n' "$(timestamp)" "$NAME" "$LABEL" "$SRC" "$DEST" >> "$LOG_FILE"
 mkdir -p "$DEST"
 
 # stop torrent first
@@ -115,14 +115,11 @@ if [ -d "$SRC" ]; then
   # remove common sidecar files before move (case-insensitive)
   find "$SRC" -type f \( -iname '*.txt' -o -iname '*.nfo' -o -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \) -exec rm -f {} \; 2>/dev/null || true
   # move each entry inside SRC to DEST; ignore errors if nothing to move
-  find "$SRC" -type f -mindepth 1 -maxdepth 3 -exec mv -f {} "$DEST"/ \; 2>/dev/null || true
+  find "$SRC" -type f -mindepth 1 -maxdepth 3 -exec mv -f {} "$DEST"/ \; 2>>"$LOG_FILE" || true
   # attempt to remove empty source dir
   find "$SRC" -depth -type d -empty -delete 2>/dev/null || true
-else
-  # if SRC is a file path, move it
-  if [ -e "$SRC" ]; then
-    mv -f "$SRC" "$DEST"/ 2>/dev/null || true
-  fi
+elif [ -e "$SRC" ]; then
+  mv -f "$SRC" "$DEST"/ 2>>"$LOG_FILE" || true
 fi
 
 # remove torrent from client (does not delete data)
