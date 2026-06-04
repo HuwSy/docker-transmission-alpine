@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM alpine:edge
 
 ARG APP_VERSION=0.0.4
 
