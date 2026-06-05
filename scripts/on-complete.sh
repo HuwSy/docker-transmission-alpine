@@ -2,7 +2,7 @@
 
 TID="${TR_TORRENT_ID:-}"
 NAME="${TR_TORRENT_NAME:-}"
-DIR="${TR_TORRENT_DIR:-}"
+DIR="${TR_TORRENT_DIR:-/downloads}"
 LABEL="${TR_TORRENT_LABELS:-}"
 
 LOG_FILE="/config/torrent-complete.log"
@@ -16,7 +16,7 @@ MAX_MIN=60
 RATIO_THRESHOLD="2.0"
 [ -z "$LABEL" ] && MAX_MIN=1440 && RATIO_THRESHOLD="5.0"
 
-printf '%s: %s (%s) Completed awaiting ratio %s or %s min\n' "$(timestamp)" "$NAME" "$LABEL" "$RATIO_THRESHOLD" "$MAX_MIN" >> "$LOG_FILE"
+printf '%s: %s/%s (%s) Completed awaiting ratio %s or %s min\n' "$(timestamp)" "$DIR" "$NAME" "$LABEL" "$RATIO_THRESHOLD" "$MAX_MIN" >> "$LOG_FILE"
 
 ratio=""
 c=0
@@ -35,7 +35,7 @@ while [ "$c" -lt "$MAX_MIN" ]; do
   c=$((c + 1))
 done
 
-printf '%s: %s (%s) Completed ratio %s in %s min\n' "$(timestamp)" "$NAME" "$LABEL" "$ratio" "$c" >> "$LOG_FILE"
+printf '%s: %s/%s (%s) Completed ratio %s in %s min\n' "$(timestamp)" "$DIR" "$NAME" "$LABEL" "$ratio" "$c" >> "$LOG_FILE"
 
 # re-fetch label and name (labels may be added after completion or names cleaned)
 Tinfo=$(transmission-remote "localhost:${WEBUI}" --auth "${WEBUSER}:${WEBPASS}" -t "$TID" 2>/dev/null || true)
@@ -102,9 +102,9 @@ case "$CAP_LABEL" in
 esac
 
 SRC="${DIR%/}/${NAME}"
-DEST="/downloads/completed/${CAP_LABEL}"
+DEST="${DIR%/}/completed/${CAP_LABEL}"
 
-printf '%s: %s (%s) Completed %s moving to %s\n' "$(timestamp)" "$NAME" "$LABEL" "$SRC" "$DEST" >> "$LOG_FILE"
+printf '%s: %s/%s (%s) Completed moving %s to %s\n' "$(timestamp)" "$DIR" "$NAME" "$LABEL" "$SRC" "$DEST" >> "$LOG_FILE"
 mkdir -p "$DEST"
 
 # stop torrent first
@@ -115,14 +115,17 @@ if [ -d "$SRC" ]; then
   # remove common sidecar files before move (case-insensitive)
   find "$SRC" -type f \( -iname '*.txt' -o -iname '*.nfo' -o -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \) -exec rm -f {} \; 2>/dev/null || true
   # move each entry inside SRC to DEST; ignore errors if nothing to move
-  find "$SRC" -type f -mindepth 1 -maxdepth 3 -exec mv -f {} "$DEST"/ \; 2>>"$LOG_FILE" || true
+  find "$SRC" -type f -mindepth 1 -maxdepth 3 -exec mv -f {} "$DEST"/ \; 2>>"$LOG_FILE" || exit 1
   # attempt to remove empty source dir
   find "$SRC" -depth -type d -empty -delete 2>/dev/null || true
 elif [ -e "$SRC" ]; then
-  mv -f "$SRC" "$DEST"/ 2>>"$LOG_FILE" || true
+  mv -f "$SRC" "$DEST"/ 2>>"$LOG_FILE" || exit 1
+else
+  printf '%s: %s/%s (%s) Error is not a dir or file\n' "$(timestamp)" "$DIR" "$NAME" "$LABEL" >> "$LOG_FILE"
+  exit 1
 fi
 
 # remove torrent from client (does not delete data)
 transmission-remote "localhost:${WEBUI}" --auth "${WEBUSER}:${WEBPASS}" --torrent "$TID" --remove >/dev/null 2>&1 || true
 
-printf '%s: %s (%s) Completed moved and cleaned\n' "$(timestamp)" "$NAME" "$LABEL" >> "$LOG_FILE"
+printf '%s: %s/%s (%s) Completed moved and cleaned\n' "$(timestamp)" "$DIR" "$NAME" "$LABEL" >> "$LOG_FILE"
