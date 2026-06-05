@@ -2,8 +2,10 @@
 
 TID="${TR_TORRENT_ID:-}"
 NAME="${TR_TORRENT_NAME:-}"
-DIR="${TR_TORRENT_DIR:-/downloads}"
 LABEL="${TR_TORRENT_LABELS:-}"
+
+DIR="${TR_TORRENT_DIR:-/downloads}"
+DIR="${DIR%/}"
 
 LOG_FILE="/config/torrent-complete.log"
 
@@ -50,7 +52,7 @@ fi
 
 NNAME=$(printf '%s\n' "$Tinfo" | awk -F': ' '/^[[:space:]]*Name:/ {print $2; exit}')
 if [ -n "$NNAME" ]; then
-  CANDIDATE="${DIR%/}/$NNAME"
+  CANDIDATE="$DIR/$NNAME"
   if [ -e "$CANDIDATE" ] || [ -d "$CANDIDATE" ]; then
     NAME="$NNAME"
   fi
@@ -101,10 +103,10 @@ case "$CAP_LABEL" in
     ;;
 esac
 
-SRC="${DIR%/}/${NAME}"
-DEST="${DIR%/}/completed/${CAP_LABEL}"
+SRC="$DIR/$NAME"
+DEST="$DIR/completed/$CAP_LABEL"
 
-printf '%s: %s/%s (%s) Completed moving %s to %s\n' "$(timestamp)" "$DIR" "$NAME" "$LABEL" "$SRC" "$DEST" >> "$LOG_FILE"
+printf '%s: %s/%s (%s) Completed moving to %s\n' "$(timestamp)" "$DIR" "$NAME" "$LABEL" "$DEST" >> "$LOG_FILE"
 mkdir -p "$DEST"
 
 # stop torrent first
