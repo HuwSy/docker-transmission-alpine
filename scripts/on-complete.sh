@@ -121,7 +121,7 @@ if [ -d "$SRC" ]; then
   # attempt to remove empty source dir
   find "$SRC" -depth -type d -empty -delete 2>/dev/null || true
 elif [ -e "$SRC" ]; then
-  mv -f "$SRC" "$DEST"/ 2>>"$LOG_FILE" || exit 1
+  find "$SRC" -type f -maxdepth 0 -exec mv -f {} "$DEST"/ \; 2>>"$LOG_FILE" || exit 1
 else
   printf '%s: %s/%s (%s) Error is not a dir or file\n' "$(timestamp)" "$DIR" "$NAME" "$LABEL" >> "$LOG_FILE"
   exit 1
