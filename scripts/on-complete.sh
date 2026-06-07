@@ -117,7 +117,7 @@ if [ -e "$SRC" ] || [ -d "$SRC" ]; then
   # remove common sidecar files before move (case-insensitive)
   find "$SRC" -type f \( -iname '*.txt' -o -iname '*.nfo' -o -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \) -exec rm -f {} \; 2>/dev/null || true
   # move each entry inside SRC to DEST; exit on errors
-  find "$SRC" -type f -maxdepth 3 -exec mv -t "$DEST" -- '{}' + 2>>"$LOG_FILE" || exit 1
+  find "$SRC" -type f -maxdepth 3 -execdir mv -- '{}' "$DEST" \; 2>>"$LOG_FILE" || exit 1
   # attempt to remove empty source dir
   find "$SRC" -depth -type d -empty -delete 2>/dev/null || true
 else
