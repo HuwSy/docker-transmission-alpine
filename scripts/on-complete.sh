@@ -53,7 +53,7 @@ fi
 NNAME=$(printf '%s\n' "$Tinfo" | awk -F': ' '/^[[:space:]]*Name:/ {print $2; exit}')
 if [ -n "$NNAME" ]; then
   CANDIDATE="$DIR/$NNAME"
-  if [ -e "$CANDIDATE" ] || [ -d "$CANDIDATE" ]; then
+  if [ -e "$CANDIDATE" ]; then
     NAME="$NNAME"
   fi
 fi
@@ -107,20 +107,22 @@ SRC="$DIR/$NAME"
 DEST="$DIR/completed/$CAP_LABEL"
 
 printf '%s: %s/%s (%s) Completed moving to %s\n' "$(timestamp)" "$DIR" "$NAME" "$LABEL" "$DEST" >> "$LOG_FILE"
-mkdir -p "$DEST"
+mkdir -p -- "$DEST"
 
 # stop torrent first
 transmission-remote "localhost:${WEBUI}" --auth "${WEBUSER}:${WEBPASS}" --torrent "$TID" --stop >/dev/null 2>&1 || true
 
 # move contents of SRC into DEST (works for single-file and multi-file torrents)
-if [ -e "$SRC" ] || [ -d "$SRC" ]; then
+if [ -f "$SRC" ]; then
+  mv -- "$SRC" "$DEST"/ 2>>"$LOG_FILE" || exit 1
+elif [ -d "$SRC" ]; then
   # remove common sidecar files before move (case-insensitive)
   find "$SRC" -type f \( -iname '*.txt' -o -iname '*.nfo' -o -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \) -exec rm -f {} \; 2>/dev/null || true
   # move each entry inside SRC upto depth of 3 to DEST, but not by find due to NUL issues
   fail=0
-  mv "$SRC"/*/*/*.* "$DEST"/ 2>>"$LOG_FILE" || fail=$((fail+1))
-  mv "$SRC"/*/*.* "$DEST"/ 2>>"$LOG_FILE" || fail=$((fail+1))
-  mv "$SRC"/*.* "$DEST"/ 2>>"$LOG_FILE" || fail=$((fail+1))
+  mv -- "$SRC"/*/*/*.* "$DEST"/ 2>>"$LOG_FILE" || fail=$((fail+1))
+  mv -- "$SRC"/*/*.* "$DEST"/ 2>>"$LOG_FILE" || fail=$((fail+1))
+  mv -- "$SRC"/*.* "$DEST"/ 2>>"$LOG_FILE" || fail=$((fail+1))
   [ "$fail" -eq 3 ] && exit 1
   # attempt to remove empty source dir
   find "$SRC" -depth -type d -empty -delete 2>/dev/null || true
