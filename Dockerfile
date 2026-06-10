@@ -15,9 +15,9 @@ RUN printf "%s\n" \
   "https://dl-cdn.alpinelinux.org/alpine/edge/main" \
   "https://dl-cdn.alpinelinux.org/alpine/edge/community" \
   "https://dl-cdn.alpinelinux.org/alpine/edge/testing" \
-  > /etc/apk/repositories
-
-RUN apk update && apk upgrade --available --no-cache
+  > /etc/apk/repositories \
+  && apk update \
+  && apk upgrade --available --no-cache
 
 RUN apk add --no-cache \
   transmission-daemon \
