@@ -10,14 +10,6 @@ ENV WEBUI=8080 \
   RSSFEEDS="" \
   SCHEDULE="*/30 *"
 
-FROM alpine:edge
-
-ARG APP_VERSION=0.0.3
-
-ENV LIBVA_DRIVER_NAME=i965
-ENV LIBVA_DRIVERS_PATH=/usr/lib/dri
-ENV DOTNET_SYSTEM_NET_HTTP_SOCKETSHTTPHANDLER_POOLEDCONNECTIONLIFETIME=00:05:00
-
 # Enable all Edge repos
 RUN printf "%s\n" \
   "https://dl-cdn.alpinelinux.org/alpine/edge/main" \
