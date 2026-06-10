@@ -1,6 +1,6 @@
 FROM alpine:edge
 
-ARG APP_VERSION=0.0.4
+ARG APP_VERSION=0.0.5
 
 ENV WEBUI=8080 \
   INCOMING=17000 \
@@ -9,6 +9,8 @@ ENV WEBUI=8080 \
   WEBPASS="" \
   RSSFEEDS="" \
   SCHEDULE="*/30 *"
+
+RUN apk update && apk upgrade --available --no-cache
 
 RUN apk add --no-cache \
   transmission-daemon \
