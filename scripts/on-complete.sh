@@ -6,6 +6,7 @@ LABEL="${TR_TORRENT_LABELS:-}"
 
 DIR="${TR_TORRENT_DIR:-/downloads}"
 DIR="${DIR%/}"
+cd "$DIR"
 
 LOG_FILE="/config/torrent-complete.log"
 
