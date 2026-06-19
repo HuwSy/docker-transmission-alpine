@@ -109,7 +109,7 @@ mkdir -p -- "$DEST"
 # stop torrent first
 transmission-remote "localhost:${WEBUI}" --auth "${WEBUSER}:${WEBPASS}" --torrent "$TID" --stop >/dev/null 2>&1 || true
 
-# move contents of SRC into DEST (works for single-file and multi-file torrents)
+# move contents of NAME into DEST (works for single-file and multi-file torrents)
 if [ -f "$NAME" ] || [ -d "$NAME" ]; then
   # remove common sidecar files before move (case-insensitive)
   find "$NAME" -type f \( -iname '*.txt' -o -iname '*.nfo' -o -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \) -exec rm -f -- "{}" \; 2>/dev/null || true
