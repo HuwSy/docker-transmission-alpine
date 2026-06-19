@@ -4,9 +4,7 @@ TID="${TR_TORRENT_ID:-}"
 NAME="${TR_TORRENT_NAME:-}"
 LABEL="${TR_TORRENT_LABELS:-}"
 
-DIR="${TR_TORRENT_DIR:-/downloads}"
-DIR="${DIR%/}"
-cd "$DIR"
+cd "${TR_TORRENT_DIR:-/downloads}"
 
 LOG_FILE="/config/torrent-complete.log"
 
@@ -42,10 +40,11 @@ printf '%s: %s (%s) Completed ratio %s in %s min\n' "$(timestamp)" "$NAME" "$LAB
 
 # re-fetch label and name (labels may be added after completion or names cleaned)
 Tinfo=$(transmission-remote "localhost:${WEBUI}" --auth "${WEBUSER}:${WEBPASS}" -t "$TID" 2>/dev/null || true)
+
 NLABEL=$(printf '%s\n' "$Tinfo" | awk 'BEGIN{found=0} /^[[:space:]]*Labels:/ {found=1; next} found && NF{ gsub(/^ *| *$/,""); split($0,a,","); print a[1]; exit }')
 if [ -n "$NLABEL" ]; then
   case "$NLABEL" in
-    Film|Films|Movie|Movies|Tv|TV|Television|Shows|Music|Songs|Albums|Singles)
+    Film|Films|Movie|Movies|TV|Tv|Television|Shows|Music|Songs|Albums|Singles)
       LABEL="$NLABEL"
       ;;
   esac
@@ -57,14 +56,12 @@ if [ -n "$NNAME" ] && [ -e "$NNAME" ]; then
 fi
 
 [ -z "$LABEL" ] && exit 0
+[ -z "$NAME" ] && exit 0
 
-# Capitalize first ASCII letter of label
-FIRST_CHAR=$(printf '%s' "$LABEL" | cut -c1 | tr '[:lower:]' '[:upper:]' || true)
-REST=$(printf '%s' "$LABEL" | cut -c2- || true)
-CAP_LABEL="${FIRST_CHAR}${REST}"
+DEST="completed/"
 
 # Category handling (simple, robust transformations)
-case "$CAP_LABEL" in
+case "$LABEL" in
   Film|Films|Movie|Movies)
     # first character of torrent name for folder grouping
     FN=$(printf '%s' "$NAME" | cut -c1 | tr '[:lower:]' '[:upper:]' || true)
@@ -72,9 +69,9 @@ case "$CAP_LABEL" in
       [A-Z]) FIRST_CHAR="$FN" ;;
       *) FIRST_CHAR="0-9" ;;
     esac
-    CAP_LABEL="Films/$FIRST_CHAR"
+    DEST="completed/Films/$FIRST_CHAR/"
     ;;
-  Tv|TV|Television|Shows)
+  TV|Tv|Television|Shows)
     # remove common season/episode markers and non-letters; keep words separated by spaces
     SHOW_NAME=$(printf '%s' "$NAME" \
       | sed -E 's/^[Ww]{3}\.[A-Za-z0-9]+(\.[A-Za-z]+)+[[:space:]_-]*//' \
@@ -89,19 +86,13 @@ case "$CAP_LABEL" in
         }
         print
       }')
-    [ -z "$SHOW_NAME" ] && SHOW_NAME="Unknown"
-    CAP_LABEL="TV/$SHOW_NAME"
+    DEST="completed/TV/$SHOW_NAME/"
     ;;
   Music|Songs|Albums|Singles)
     MUSIC_NAME=$(printf '%s' "$NAME" | sed -E 's/\.[^.]+$//')
-    CAP_LABEL="Music/$MUSIC_NAME"
-    ;;
-  *)
-    CAP_LABEL="$CAP_LABEL"
+    DEST="completed/Music/$MUSIC_NAME/"
     ;;
 esac
-
-DEST="completed/$CAP_LABEL"
 
 printf '%s: %s (%s) Completed moving to %s\n' "$(timestamp)" "$NAME" "$LABEL" "$DEST" >> "$LOG_FILE"
 mkdir -p -- "$DEST"
@@ -114,7 +105,7 @@ if [ -f "$NAME" ] || [ -d "$NAME" ]; then
   # remove common sidecar files before move (case-insensitive)
   find "$NAME" -type f \( -iname '*.txt' -o -iname '*.nfo' -o -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \) -exec rm -f -- "{}" \; 2>/dev/null || true
   # move each entry inside NAME upto depth of 3 to DEST
-  find "$NAME" -maxdepth 3 -type f -exec mv -- "{}" "$DEST"/ \; 2>>"$LOG_FILE" || exit 1
+  find "$NAME" -maxdepth 3 -type f -exec mv -- "{}" "$DEST" \; 2>>"$LOG_FILE" || exit 1
   # attempt to remove empty source dir
   find "$NAME" -depth -type d -empty -delete 2>/dev/null || true
 else
