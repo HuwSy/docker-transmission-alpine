@@ -52,11 +52,8 @@ if [ -n "$NLABEL" ]; then
 fi
 
 NNAME=$(printf '%s\n' "$Tinfo" | awk -F': ' '/^[[:space:]]*Name:/ {print $2; exit}')
-if [ -n "$NNAME" ]; then
-  CANDIDATE="$DIR/$NNAME"
-  if [ -e "$CANDIDATE" ]; then
-    NAME="$NNAME"
-  fi
+if [ -n "$NNAME" ] && [ -e "$NNAME" ]; then
+  NAME="$NNAME"
 fi
 
 [ -z "$LABEL" ] && exit 0
@@ -104,8 +101,8 @@ case "$CAP_LABEL" in
     ;;
 esac
 
-SRC="$DIR/$NAME"
-DEST="$DIR/completed/$CAP_LABEL"
+SRC="$NAME"
+DEST="completed/$CAP_LABEL"
 
 printf '%s: %s/%s (%s) Completed moving to %s\n' "$(timestamp)" "$DIR" "$NAME" "$LABEL" "$DEST" >> "$LOG_FILE"
 mkdir -p -- "$DEST"
