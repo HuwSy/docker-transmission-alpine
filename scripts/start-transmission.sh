@@ -77,6 +77,22 @@ parse_schedule_minutes() {
         ;;
     esac
 
+    # comma list support (e.g., 3,12,18)
+    case "$FIELD" in
+      *,* )
+        # validate each element
+        LIST_OK=1
+        for X in $(echo "$FIELD" | tr ',' ' '); do
+          is_num "$X" || LIST_OK=0
+          [ "$X" -ge 0 ] 2>/dev/null || LIST_OK=0
+          [ "$X" -le "$MAX" ] 2>/dev/null || LIST_OK=0
+        done
+        [ "$LIST_OK" -eq 1 ] || return 1
+        echo "list:$FIELD"
+        return 0
+        ;;
+    esac
+
     if is_num "$FIELD"; then
       [ "$FIELD" -ge 0 ] 2>/dev/null || return 1
       [ "$FIELD" -le "$MAX" ] 2>/dev/null || return 1
@@ -130,6 +146,12 @@ start_rss_scheduler() {
       at)
         [ "$CM" -eq "$MIN_VAL" ]
         ;;
+      list)
+        for X in $(echo "$MIN_VAL" | tr ',' ' '); do
+          [ "$CM" -eq "$X" ] && return 0
+        done
+        return 1
+        ;;
       *)
         return 1
         ;;
@@ -158,6 +180,14 @@ start_rss_scheduler() {
         ;;
       at)
         [ "$CH" -eq "$HOUR_VAL" ]
+        ;;
+      list)
+        # cron-like: do NOT match after midnight rollover
+        [ "$WRAPPED" -eq 1 ] && return 1
+        for X in $(echo "$HOUR_VAL" | tr ',' ' '); do
+          [ "$CH" -eq "$X" ] && return 0
+        done
+        return 1
         ;;
       *)
         return 1
