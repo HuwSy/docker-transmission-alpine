@@ -58,7 +58,7 @@ fi
 [ -z "$LABEL" ] && exit 0
 [ -z "$NAME" ] && exit 0
 
-DEST="completed/"
+DEST="completed"
 
 # Category handling (simple, robust transformations)
 case "$LABEL" in
@@ -69,7 +69,7 @@ case "$LABEL" in
       [A-Z]) FIRST_CHAR="$FN" ;;
       *) FIRST_CHAR="0-9" ;;
     esac
-    DEST="completed/Films/$FIRST_CHAR/"
+    DEST="$DEST/Films/$FIRST_CHAR/"
     ;;
   TV|Tv|Television|Shows)
     # remove common season/episode markers and non-letters; keep words separated by spaces
@@ -86,12 +86,15 @@ case "$LABEL" in
         }
         print
       }')
-    DEST="completed/TV/$SHOW_NAME/"
+    DEST="$DEST/TV/$SHOW_NAME/"
     ;;
   Music|Songs|Albums|Singles)
     MUSIC_NAME=$(printf '%s' "$NAME" | sed -E 's/\.[^.]+$//')
-    DEST="completed/Music/$MUSIC_NAME/"
+    DEST="$DEST/Music/$MUSIC_NAME/"
     ;;
+  *)
+    DEST="$DEST${LABEL:+/$LABEL}/"
+    LABEL=""
 esac
 
 printf '%s: %s (%s) Completed moving to %s\n' "$(timestamp)" "$NAME" "$LABEL" "$DEST" >> "$LOG_FILE"
@@ -101,13 +104,15 @@ mkdir -p -- "$DEST"
 transmission-remote "localhost:${WEBUI}" --auth "${WEBUSER}:${WEBPASS}" --torrent "$TID" --stop >/dev/null 2>&1 || true
 
 # move contents of NAME into DEST (works for single-file and multi-file torrents)
-if [ -f "$NAME" ] || [ -d "$NAME" ]; then
+if [ -d "$NAME" ] && [ -n "$LABEL" ]; then
   # remove common sidecar files before move (case-insensitive)
-  find "$NAME" -type f \( -iname '*.txt' -o -iname '*.nfo' -o -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \) -exec rm -f -- "{}" \; 2>/dev/null || true
+  find "$NAME" -type f \( -iname '*.txt' -o -iname '*.nfo' -o -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \) -delete 2>/dev/null || true
   # move each entry inside NAME upto depth of 3 to DEST
   find "$NAME" -maxdepth 3 -type f -exec mv -- "{}" "$DEST" \; 2>>"$LOG_FILE" || exit 1
   # attempt to remove empty source dir
   find "$NAME" -depth -type d -empty -delete 2>/dev/null || true
+elif [ -f "$NAME" ] || [ -d "$NAME" ]; then
+  mv -- "$NAME" "$DEST" || exit 1
 else
   printf '%s: %s (%s) Error is not a dir or file\n' "$(timestamp)" "$NAME" "$LABEL" >> "$LOG_FILE"
   exit 1
