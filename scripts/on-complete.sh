@@ -19,7 +19,7 @@ MAX_MIN=60
 RATIO_THRESHOLD="2.0"
 [ -z "$LABEL" ] && MAX_MIN=1440 && RATIO_THRESHOLD="5.0"
 
-printf '%s: %s/%s (%s) Completed awaiting ratio %s or %s min\n' "$(timestamp)" "$DIR" "$NAME" "$LABEL" "$RATIO_THRESHOLD" "$MAX_MIN" >> "$LOG_FILE"
+printf '%s: %s (%s) Completed awaiting ratio %s or %s min\n' "$(timestamp)" "$NAME" "$LABEL" "$RATIO_THRESHOLD" "$MAX_MIN" >> "$LOG_FILE"
 
 ratio=""
 c=0
@@ -38,7 +38,7 @@ while [ "$c" -lt "$MAX_MIN" ]; do
   c=$((c + 1))
 done
 
-printf '%s: %s/%s (%s) Completed ratio %s in %s min\n' "$(timestamp)" "$DIR" "$NAME" "$LABEL" "$ratio" "$c" >> "$LOG_FILE"
+printf '%s: %s (%s) Completed ratio %s in %s min\n' "$(timestamp)" "$NAME" "$LABEL" "$ratio" "$c" >> "$LOG_FILE"
 
 # re-fetch label and name (labels may be added after completion or names cleaned)
 Tinfo=$(transmission-remote "localhost:${WEBUI}" --auth "${WEBUSER}:${WEBPASS}" -t "$TID" 2>/dev/null || true)
@@ -101,29 +101,28 @@ case "$CAP_LABEL" in
     ;;
 esac
 
-SRC="$NAME"
 DEST="completed/$CAP_LABEL"
 
-printf '%s: %s/%s (%s) Completed moving to %s\n' "$(timestamp)" "$DIR" "$NAME" "$LABEL" "$DEST" >> "$LOG_FILE"
+printf '%s: %s (%s) Completed moving to %s\n' "$(timestamp)" "$NAME" "$LABEL" "$DEST" >> "$LOG_FILE"
 mkdir -p -- "$DEST"
 
 # stop torrent first
 transmission-remote "localhost:${WEBUI}" --auth "${WEBUSER}:${WEBPASS}" --torrent "$TID" --stop >/dev/null 2>&1 || true
 
 # move contents of SRC into DEST (works for single-file and multi-file torrents)
-if [ -f "$SRC" ] || [ -d "$SRC" ]; then
+if [ -f "$NAME" ] || [ -d "$NAME" ]; then
   # remove common sidecar files before move (case-insensitive)
-  find "$SRC" -type f \( -iname '*.txt' -o -iname '*.nfo' -o -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \) -exec rm -f -- "{}" \; 2>/dev/null || true
-  # move each entry inside SRC (or SRC) upto depth of 3 to DEST
-  find "$SRC" -maxdepth 3 -type f -exec mv -- "{}" "$DEST"/ \; 2>>"$LOG_FILE" || exit 1
+  find "$NAME" -type f \( -iname '*.txt' -o -iname '*.nfo' -o -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \) -exec rm -f -- "{}" \; 2>/dev/null || true
+  # move each entry inside NAME upto depth of 3 to DEST
+  find "$NAME" -maxdepth 3 -type f -exec mv -- "{}" "$DEST"/ \; 2>>"$LOG_FILE" || exit 1
   # attempt to remove empty source dir
-  find "$SRC" -depth -type d -empty -delete 2>/dev/null || true
+  find "$NAME" -depth -type d -empty -delete 2>/dev/null || true
 else
-  printf '%s: %s/%s (%s) Error is not a dir or file\n' "$(timestamp)" "$DIR" "$NAME" "$LABEL" >> "$LOG_FILE"
+  printf '%s: %s (%s) Error is not a dir or file\n' "$(timestamp)" "$NAME" "$LABEL" >> "$LOG_FILE"
   exit 1
 fi
 
 # remove torrent from client (does not delete data)
 transmission-remote "localhost:${WEBUI}" --auth "${WEBUSER}:${WEBPASS}" --torrent "$TID" --remove >/dev/null 2>&1 || true
 
-printf '%s: %s/%s (%s) Completed moved and cleaned\n' "$(timestamp)" "$DIR" "$NAME" "$LABEL" >> "$LOG_FILE"
+printf '%s: %s (%s) Completed moved and cleaned\n' "$(timestamp)" "$NAME" "$LABEL" >> "$LOG_FILE"
