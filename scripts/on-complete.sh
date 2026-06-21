@@ -113,7 +113,6 @@ if [ -d "$NAME" ] && [ -n "$LABEL" ]; then
   find "$NAME" -depth -type d -empty -delete 2>/dev/null || true
 elif [ -f "$NAME" ] || [ -d "$NAME" ]; then
   mv -- "$NAME" "$DEST" || exit 1
-  exit 0
 else
   printf '%s: %s (%s) Error is not a dir or file\n' "$(timestamp)" "$NAME" "$LABEL" >> "$LOG_FILE"
   exit 1
