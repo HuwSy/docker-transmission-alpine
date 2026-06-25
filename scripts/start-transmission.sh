@@ -246,6 +246,7 @@ if [ ! -f "$SETTINGS" ] && [ -w "$CONFIG_DIR" ]; then
   "rpc-whitelist-enabled": false,
   "rpc-authentication-required": false,
   "peer-port": ${INCOMING},
+  "peer-port-random-on-start": false,
   "port-forwarding-enabled": ${UPNP},
   "script-torrent-done-enabled": true,
   "script-torrent-done-filename": "/opt/default-scripts/on-complete.sh",
